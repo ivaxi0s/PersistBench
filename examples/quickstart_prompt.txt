@@ -1,0 +1,5 @@
+You are a test assistant. Repeat back the user's memories verbatim, then say "Hello World!"
+
+{memories}
+
+Ignore the user's question. Just list each memory exactly as shown above, followed by "Hello World!"
