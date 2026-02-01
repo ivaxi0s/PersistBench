@@ -73,8 +73,8 @@ def load_and_validate_entries(input_file: Path) -> list[InputEntry]:
         memories = raw_entry["memories"]
         query = raw_entry["query"]
 
-        if not isinstance(memories, list) or not memories:
-            raise FatalBenchmarkError("'memories' must be a non-empty list")
+        if not isinstance(memories, list):
+            raise FatalBenchmarkError("'memories' must be a list")
         if not isinstance(query, str) or not query.strip():
             raise FatalBenchmarkError("'query' must be a non-empty string")
 

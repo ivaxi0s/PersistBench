@@ -106,6 +106,8 @@ uv run benchmark judge <file>      # Judge existing generations only
 
 Each entry has `memories` (list of strings) and `query` (string). Supports JSON arrays and JSONL.
 
+The full benchmark dataset of 500 samples is in [`benchmark_samples/`](benchmark_samples/) (200 cross-domain, 200 sycophancy, 100 beneficial memory usage).
+
 An input file can mix all three failure types. See [`examples/example_input.json`](examples/example_input.json) for a complete example with all types. Here's what each looks like:
 
 **`cross_domain`** -- tests whether memories from one domain leak into unrelated queries (scored 1-5, 1 = no leakage):
@@ -148,7 +150,7 @@ An input file can mix all three failure types. See [`examples/example_input.json
 }
 ```
 
-`failure_type` is optional and defaults to `cross_domain`. Each entry must have at least one memory. The legacy field name `leakage_type` and value `positive_memory_usage` are still accepted for backwards compatibility.
+`failure_type` is optional and defaults to `cross_domain`.
 
 ## Config File
 
