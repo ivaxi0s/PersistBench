@@ -12,7 +12,7 @@ uv sync && uv pip install -e .
 
 ## Quick Start
 
-A ready-to-run example is included that uses free OpenRouter models. This is the fastest way to verify the pipeline works and is all you need if you're submitting generations for the leaderboard.
+A ready-to-run example is included that uses free OpenRouter models. This is the fastest way to verify the pipeline works.
 
 **1. Get a free OpenRouter API key** at [openrouter.ai/keys](https://openrouter.ai/keys):
 
@@ -52,7 +52,7 @@ The [quickstart config](examples/quickstart_config.json) uses a [test prompt](ex
 
 The config tells the benchmark what input data to evaluate, which models to test, and where to write results. `input` points to your test data, `output` is where results go.
 
-See [`examples/example_config.json`](examples/example_config.json) for a full config with one model per provider (OpenAI, Anthropic, Gemini, OpenRouter, Vertex AI, and OpenAI-compatible).
+See [`examples/example_config.json`](examples/example_config.json) for a full config with one model per [provider](#providers) (OpenAI, Anthropic, Gemini, OpenRouter, Vertex AI, and OpenAI-compatible).
 
 ```bash
 # Strongly recommended: test with a small subset before full runs.
@@ -76,6 +76,45 @@ The CLI auto-detects whether you pass a config file or a checkpoint file. A conf
 > [!IMPORTANT]
 > **Reasoning traces must not appear in model responses.** The judge evaluates only the final response content and is not designed to interpret reasoning traces (chain-of-thought, thinking tokens, etc.). If reasoning appears in the response text, scores will be unreliable. Most providers handle this automatically -- OpenRouter extracts reasoning into a separate field, Anthropic separates thinking blocks, and both `vertexai_oss` and `openai_compatible` strip common reasoning XML tags (`<think>`, `<thinking>`, `<reasoning>`, `<thought>`, `<reflection>`). If your model uses a non-standard format, you may need to modify the provider or add your own.
 
+## Leaderboard / Running Your Own Model
+
+If you're evaluating your own model for the leaderboard, use `benchmark generate` (not `benchmark run`). You only need to produce generations -- judging will be handled separately by the PersistBench team during leaderboard evaluation.
+
+**1. Create your config** pointing to the full benchmark dataset and your model (see [Providers](#providers) for setup):
+
+```json
+{
+  "input": "benchmark_samples/full_benchmark.jsonl",
+  "output": "outputs/my_model_output.json",
+  "generations": 3,
+  "concurrency": 10,
+  "models": [
+    {
+      "name": "my-model",
+      "provider": "openai_compatible",
+      "base_url": "https://my-api.example.com/v1",
+      "api_key_env": "MY_API_KEY"
+    }
+  ]
+}
+```
+
+**2. Verify with a small test first:**
+
+```bash
+uv run benchmark generate my_config.json --limit 1
+```
+
+**3. Run the full benchmark:**
+
+```bash
+uv run benchmark generate my_config.json
+```
+
+**4. Submit** the output JSON file. It contains all 500 entries with your model's responses.
+
+If the run is interrupted, re-run the same command -- it resumes from the checkpoint automatically. You can also use a [custom prompt template](#custom-prompt-template) if your model requires a specific system prompt format.
+
 ## CLI
 
 Three subcommands, all accepting either a config file or checkpoint:
@@ -95,18 +134,18 @@ uv run benchmark judge <file>      # Judge existing generations only
 | `--dry-run`, `-d` | Preview without API calls |
 | `--limit N`, `-l N` | Process only the first N entries |
 | `--concurrency N` | Override concurrent request count |
-| `--judge-provider` | `vertexai` or `openrouter` (default: `openrouter`) |
+| `--judge-provider` | `vertexai` or `openrouter` (default: `openrouter`). See [Judge](#judge). |
 | `--batch-poll-timeout N` | Batch job polling timeout in minutes (default: 25) |
 | `--cancel` | Cancel all active batch jobs |
 | `--no-auto-rerun` | Disable automatic retry on run failure |
 | `--store-raw-api-responses` | Saves full provider API responses in output |
-| `--ignore-config-mismatch` | Bypass config change validation on resume (see warning below) |
+| `--ignore-config-mismatch` | Bypass config change validation on resume. See [Key Behaviors](#key-behaviors). |
 
 ## Input Format
 
 Each entry has `memories` (list of strings) and `query` (string). Supports JSON arrays and JSONL.
 
-The full benchmark dataset of 500 samples is in [`benchmark_samples/`](benchmark_samples/) (200 cross-domain, 200 sycophancy, 100 beneficial memory usage). A combined file [`benchmark_samples/full_benchmark.jsonl`](benchmark_samples/full_benchmark.jsonl) is provided for running the full benchmark:
+The full benchmark dataset of 500 samples is in [`benchmark_samples/`](benchmark_samples/) (200 cross-domain, 200 sycophancy, 100 beneficial memory usage). A combined file [`benchmark_samples/full_benchmark.jsonl`](benchmark_samples/full_benchmark.jsonl) is provided for running the full benchmark with your [config](#config-file):
 
 ```bash
 uv run benchmark generate my_config.json  # set "input": "benchmark_samples/full_benchmark.jsonl"
@@ -162,12 +201,12 @@ An input file can mix all three failure types. See [`examples/example_input.json
 |-------|:--------:|---------|-------------|
 | `input` | yes | | Path to input JSON or JSONL file |
 | `output` | yes | | Path to output/checkpoint file |
-| `models` | yes | | List of models to evaluate (see below) |
+| `models` | yes | | List of models to evaluate. See [Model Entry](#model-entry). |
 | `generations` | | 1 | Responses per entry per model |
 | `concurrency` | | 1 | Max parallel API calls |
 | `limit` | | all | Max entries to process |
-| `judge_provider` | | `openrouter` | `"vertexai"` or `"openrouter"` |
-| `prompt_template` | | built-in | Path to custom system prompt template |
+| `judge_provider` | | `openrouter` | `"vertexai"` or `"openrouter"`. See [Judge](#judge). |
+| `prompt_template` | | built-in | Path to custom system prompt template. See [Custom Prompt Template](#custom-prompt-template). |
 | `batch_poll_timeout_minutes` | | 25 | Timeout for batch job polling |
 | `store_raw_api_responses` | | false | Include full raw API responses in output |
 
@@ -176,8 +215,8 @@ An input file can mix all three failure types. See [`examples/example_input.json
 Each model in the `models` array has:
 
 - **`name`** (required): Model identifier (e.g. `"gpt-4o"`, `"claude-sonnet-4-5-20250929"`). Must be unique within the config.
-- **`provider`** (required): One of `openrouter`, `openai`, `anthropic`, `gemini`, `vertexai_oss`, or `openai_compatible`.
-- **`mode`**: `"sequential"` (default) or `"batch"`. Sequential sends one request at a time (with concurrency); batch submits all at once to the provider's batch API.
+- **`provider`** (required): One of `openrouter`, `openai`, `anthropic`, `gemini`, `vertexai_oss`, or `openai_compatible`. See [Providers](#providers) for details and examples.
+- **`mode`**: `"sequential"` (default) or `"batch"`. Sequential sends one request at a time (with concurrency); batch submits all at once to the provider's batch API. See the [Providers](#providers) table for batch support.
 - **`api_params`**: Provider-specific parameters passed directly to the API (temperature, max_tokens, etc.).
 - **`base_url`**: API endpoint URL. Required for `openai_compatible`.
 - **`api_key_env`**: Name of the environment variable holding the API key. Only used by `openai_compatible` (defaults to `OPENAI_API_KEY`).
@@ -327,13 +366,13 @@ export MAX_RETRIES=3  # API retry attempts (default: 3)
 
 ## Judge
 
-All evaluations use `moonshotai/kimi-k2-thinking` at temperature 0. The judge provider can be set via `--judge-provider`, the config file `judge_provider` field, or the `JUDGE_PROVIDER` env var.
+All evaluations use `moonshotai/kimi-k2-thinking` at temperature 0. The judge provider can be set via [`--judge-provider`](#flags), the config file [`judge_provider`](#config-file) field, or the `JUDGE_PROVIDER` [env var](#environment-variables).
 
 ## Key Behaviors
 
 - **Checkpoint/resume**: Progress is saved to the output file after every generation and judgment. Safe to Ctrl+C and resume by re-running the same command.
 - **Auto-rerun**: On failures, the benchmark automatically retries up to 3 times with reduced concurrency. Disable with `--no-auto-rerun`.
-- **Batch mode**: Submits to provider batch APIs (typically 50% cheaper). Polls every 5 seconds until completion or timeout. Re-run to continue polling.
+- **Batch mode**: Submits to [provider](#providers) batch APIs (typically 50% cheaper). Polls every 5 seconds until completion or timeout. Re-run to continue polling.
 - **Judge-only**: `benchmark judge output.json` evaluates all generations in a checkpoint. Errors if any generations are missing responses.
 - **Config mismatch protection**: Resuming a checkpoint with changed model config (api_params, provider, mode), judge model, or failure types will error by default to prevent mixed-provenance data. Use `--ignore-config-mismatch` to bypass this, but be aware: only remaining work runs with the new config, already-completed generations and judgments are kept as-is, and the checkpoint metadata is overwritten with the latest config. There is no per-generation record of which config was used.
 - **Removed models**: If you remove a model from your config and resume, its existing results stay in the checkpoint entries but the model is removed from metadata. The old results are preserved but won't be processed further.
