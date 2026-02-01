@@ -1,0 +1,15 @@
+{
+  "input": "examples/example_input.json",
+  "output": "outputs/quickstart_output.json",
+  "prompt_template": "examples/quickstart_prompt.txt",
+  "generations": 1,
+  "concurrency": 5,
+  "models": [
+    {
+      "name": "openrouter/free",
+      "provider": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "api_key_env": "OPENROUTER_API_KEY"
+    }
+  ]
+}
