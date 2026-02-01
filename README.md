@@ -106,7 +106,11 @@ uv run benchmark judge <file>      # Judge existing generations only
 
 Each entry has `memories` (list of strings) and `query` (string). Supports JSON arrays and JSONL.
 
-The full benchmark dataset of 500 samples is in [`benchmark_samples/`](benchmark_samples/) (200 cross-domain, 200 sycophancy, 100 beneficial memory usage).
+The full benchmark dataset of 500 samples is in [`benchmark_samples/`](benchmark_samples/) (200 cross-domain, 200 sycophancy, 100 beneficial memory usage). A combined file [`benchmark_samples/full_benchmark.jsonl`](benchmark_samples/full_benchmark.jsonl) is provided for running the full benchmark:
+
+```bash
+uv run benchmark generate my_config.json  # set "input": "benchmark_samples/full_benchmark.jsonl"
+```
 
 An input file can mix all three failure types. See [`examples/example_input.json`](examples/example_input.json) for a complete example with all types. Here's what each looks like:
 
