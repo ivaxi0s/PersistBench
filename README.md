@@ -1,9 +1,27 @@
-# PersistBench
+# PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?
 
-PersistBench evaluates long-term memory in LLM assistants.
-It evaluates three main categories: cross-domain leakage, sycophancy, and beneficial memory usage. 
+[![arxiv](https://img.shields.io/badge/arXiv-2602.01146-b31b1b.svg)](https://arxiv.org/pdf/2602.01146)
+
+
+PersistBench evaluates long-term memory in LLM assistants. It evaluates three main categories: cross-domain leakage, sycophancy, and beneficial memory usage. 
 Supports checkpoint/resume, batch processing, and multiple inference providers.
 
+
+## Table of Contents
+
+* [Install](#install)
+* [Quick Start](#quick-start)
+* [Leaderboard / Running Your Own Model](#leaderboard--running-your-own-model)
+* [CLI](#cli)
+* [Input Format](#input-format)
+* [Config File](#config-file)
+* [Custom Prompt Template](#custom-prompt-template)
+* [Providers](#providers)
+* [Environment Variables](#environment-variables)
+* [Judge](#judge)
+* [Key Behaviors](#key-behaviors)
+* [Citation](#citation)
+  
 ## Install
 
 ```bash
@@ -376,3 +394,19 @@ All evaluations use `moonshotai/kimi-k2-thinking` at temperature 0. The judge pr
 - **Judge-only**: `benchmark judge output.json` evaluates all generations in a checkpoint. Errors if any generations are missing responses.
 - **Config mismatch protection**: Resuming a checkpoint with changed model config (api_params, provider, mode), judge model, or failure types will error by default to prevent mixed-provenance data. Use `--ignore-config-mismatch` to bypass this, but be aware: only remaining work runs with the new config, already-completed generations and judgments are kept as-is, and the checkpoint metadata is overwritten with the latest config. There is no per-generation record of which config was used.
 - **Removed models**: If you remove a model from your config and resume, its existing results stay in the checkpoint entries but the model is removed from metadata. The old results are preserved but won't be processed further.
+
+
+# Citation
+If you use a part of the code or the benchmark samples, please cite us:
+
+```
+@misc{pulipaka2026persistbenchlongtermmemoriesforgotten,
+      title={PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?}, 
+      author={Sidharth Pulipaka and Oliver Chen and Manas Sharma and Taaha S Bajwa and Vyas Raina and Ivaxi Sheth},
+      year={2026},
+      eprint={2602.01146},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2602.01146}, 
+}
+```
