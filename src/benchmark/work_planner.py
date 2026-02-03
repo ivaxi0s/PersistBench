@@ -17,6 +17,7 @@ from benchmark.checkpoint import (
 from benchmark.config import (
     BenchmarkConfig,
     ModelEntry,
+    get_generations_for_failure_type,
     load_benchmark_config_data,
     resolve_entry_configuration,
     validate_failure_type,
@@ -198,8 +199,11 @@ def _build_work_queue(
         _hydrate_checkpoint_entry(
             checkpoint, entry, ignore_config_mismatch, config.output
         )
+        entry_generations = get_generations_for_failure_type(
+            entry["failure_type"], config.generations
+        )
         entry_work, entry_completed = _queue_generations_for_entry(
-            checkpoint, entry, config.models, config.generations
+            checkpoint, entry, config.models, entry_generations
         )
         pending_work.extend(entry_work)
         completed_count += entry_completed
@@ -264,7 +268,10 @@ def prepare_work_plan(
         existing_checkpoint=existing_checkpoint,
     )
 
-    total_count = len(input_entries) * len(config.models) * config.generations
+    total_count = sum(
+        get_generations_for_failure_type(e["failure_type"], config.generations)
+        for e in input_entries
+    ) * len(config.models)
 
     pending_work, completed_count = _build_work_queue(
         checkpoint, input_entries, config, ignore_config_mismatch

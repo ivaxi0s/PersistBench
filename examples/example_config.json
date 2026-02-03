@@ -1,7 +1,6 @@
 {
   "input": "examples/example_input.json",
   "output": "outputs/example_output.json",
-  "generations": 3,
   "concurrency": 20,
   "models": [
     {

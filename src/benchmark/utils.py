@@ -23,6 +23,7 @@ from google.oauth2.service_account import Credentials
 from openai import AsyncOpenAI
 
 from benchmark.checkpoint import Checkpoint, GenerationStatus, get_generation_status
+from benchmark.config import get_generations_for_failure_type
 from benchmark.exceptions import FatalBenchmarkError, NonRetryableError
 
 
@@ -204,7 +205,7 @@ def get_benchmark_stats(checkpoint: Checkpoint) -> BenchmarkStats:
     """Compute benchmark statistics from checkpoint."""
     stats = BenchmarkStats()
 
-    expected_generations = checkpoint.get("metadata", {}).get("generations", 1)
+    generations_override = checkpoint.get("metadata", {}).get("generations")
     expected_models: list[str] | None = None
 
     metadata_models = checkpoint.get("metadata", {}).get("models")
@@ -220,13 +221,17 @@ def get_benchmark_stats(checkpoint: Checkpoint) -> BenchmarkStats:
 
     for hash_id, entry_data in checkpoint["entries"].items():
         models_to_check = expected_models or list(entry_data["results"].keys())
+        entry_generations = get_generations_for_failure_type(
+            entry_data.get("failure_type", "cross_domain"),
+            generations_override,
+        )
         for model in models_to_check:
             result_data = entry_data["results"].get(model, {})
             if model not in stats.model_stats:
                 stats.model_stats[model] = ModelStats()
 
             ms = stats.model_stats[model]
-            for gen_idx in range(expected_generations):
+            for gen_idx in range(entry_generations):
                 status = get_generation_status(checkpoint, hash_id, model, gen_idx)
                 if status == GenerationStatus.COMPLETED:
                     stats.successful += 1

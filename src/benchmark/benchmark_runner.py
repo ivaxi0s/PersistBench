@@ -15,6 +15,7 @@ from benchmark.checkpoint import (
 )
 from benchmark.config import (
     BenchmarkConfig,
+    get_generations_for_failure_type,
     load_benchmark_config_data,
 )
 from benchmark.dry_run import run_dry_run
@@ -292,14 +293,18 @@ async def run_benchmark(
 
         # Verify in-scope generations have responses before judging (respects --limit)
         missing_generations: list[tuple[str, str, int]] = []
-        expected_generations = checkpoint.get("metadata", {}).get("generations", 1)
         expected_models = [m.name for m in config.models]
         entry_hash_ids = {e["hash_id"] for e in entries}
         for hash_id in entry_hash_ids:
             if hash_id not in checkpoint.get("entries", {}):
                 continue
+            entry_data = checkpoint["entries"][hash_id]
+            entry_generations = get_generations_for_failure_type(
+                entry_data.get("failure_type", "cross_domain"),
+                config.generations,
+            )
             for model_name in expected_models:
-                for gen_idx in range(expected_generations):
+                for gen_idx in range(entry_generations):
                     status = get_generation_status(
                         checkpoint, hash_id, model_name, gen_idx
                     )

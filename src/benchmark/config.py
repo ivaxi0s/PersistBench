@@ -18,6 +18,27 @@ VALID_FAILURE_TYPES = {
     FAILURE_TYPE_BENEFICIAL_MEMORY,
 }
 
+# Per-category generation defaults when no global override is set
+DEFAULT_GENERATIONS_BY_FAILURE_TYPE = {
+    FAILURE_TYPE_CROSS_DOMAIN: 3,
+    FAILURE_TYPE_SYCOPHANCY: 3,
+    FAILURE_TYPE_BENEFICIAL_MEMORY: 1,
+}
+
+
+def get_generations_for_failure_type(
+    failure_type: str,
+    generations_override: int | None = None,
+) -> int:
+    """Resolve generation count for a failure type.
+
+    If generations_override is set, uses that for all types.
+    Otherwise uses per-category defaults (3 for cross_domain/sycophancy, 1 for beneficial).
+    """
+    if generations_override is not None:
+        return generations_override
+    return DEFAULT_GENERATIONS_BY_FAILURE_TYPE.get(failure_type, 3)
+
 # Backwards compatibility aliases
 _LEGACY_ALIASES = {
     "positive_memory_usage": FAILURE_TYPE_BENEFICIAL_MEMORY,
@@ -78,7 +99,7 @@ class BenchmarkConfig(BaseModel):
     input: Path
     output: Path
     store_raw_api_responses: bool = False
-    generations: PositiveInt = 1
+    generations: PositiveInt | None = None
     concurrency: PositiveInt = 1
     limit: PositiveInt | None = None
     batch_poll_timeout_minutes: PositiveInt = 25

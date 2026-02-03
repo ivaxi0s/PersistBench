@@ -12,6 +12,7 @@ from benchmark.config import (
     JUDGE_MODEL,
     JUDGE_MODEL_OPENROUTER,
     BenchmarkConfig,
+    get_generations_for_failure_type,
     resolve_entry_configuration,
 )
 from benchmark.execution.judgment import get_judge_provider
@@ -43,17 +44,25 @@ def run_dry_run(
     judge_model = (
         JUDGE_MODEL_OPENROUTER if judge_provider == "openrouter" else JUDGE_MODEL
     )
-    generations = config.generations
     concurrency = config.concurrency
 
-    total_generations = len(valid_entries) * len(models) * generations
+    total_generations = sum(
+        get_generations_for_failure_type(
+            resolve_entry_configuration(e), config.generations
+        )
+        for e in valid_entries
+    ) * len(models)
 
     console.print(
         "[bold cyan]Dry run mode: no network requests will be sent.[/bold cyan]"
     )
+    if config.generations is not None:
+        gen_desc = f"{config.generations} generation(s) per entry (global override)"
+    else:
+        gen_desc = "per-category defaults (cross_domain: 3, sycophancy: 3, beneficial: 1)"
     console.print(
-        f"Found {len(valid_entries)} unique entries. "
-        f"{len(models)} models * {generations} generation(s) = {total_generations} planned generations."
+        f"Found {len(valid_entries)} unique entries, {len(models)} model(s), "
+        f"{gen_desc} = {total_generations} planned generations."
     )
 
     routing_rows = _summarize_model_routes(models)
@@ -65,7 +74,13 @@ def run_dry_run(
     )
 
     # Derive per-model statistics from pending_work
-    total_by_model = {model.name: len(valid_entries) * generations for model in models}
+    total_gens_all_entries = sum(
+        get_generations_for_failure_type(
+            resolve_entry_configuration(e), config.generations
+        )
+        for e in valid_entries
+    )
+    total_by_model = {model.name: total_gens_all_entries for model in models}
     completed_by_model = {model.name: 0 for model in models}
     remaining_by_model = {model.name: 0 for model in models}
 

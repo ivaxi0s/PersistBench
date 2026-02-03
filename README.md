@@ -1,9 +1,27 @@
-# PersistBench
+# PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?
 
-PersistBench evaluates long-term memory in LLM assistants.
-It evaluates three main categories: cross-domain leakage, sycophancy, and beneficial memory usage. 
+[![arxiv](https://img.shields.io/badge/arXiv-2602.01146-b31b1b.svg)](https://arxiv.org/pdf/2602.01146)
+
+
+PersistBench evaluates long-term memory in LLM assistants. It evaluates three main categories: cross-domain leakage, sycophancy, and beneficial memory usage. 
 Supports checkpoint/resume, batch processing, and multiple inference providers.
 
+
+## Table of Contents
+
+* [Install](#install)
+* [Quick Start](#quick-start)
+* [Leaderboard / Running Your Own Model](#leaderboard--running-your-own-model)
+* [CLI](#cli)
+* [Input Format](#input-format)
+* [Config File](#config-file)
+* [Custom Prompt Template](#custom-prompt-template)
+* [Providers](#providers)
+* [Environment Variables](#environment-variables)
+* [Judge](#judge)
+* [Key Behaviors](#key-behaviors)
+* [Citation](#citation)
+  
 ## Install
 
 ```bash
@@ -38,7 +56,6 @@ The [quickstart config](examples/quickstart_config.json) uses a [test prompt](ex
 {
   "input": "inputs/data.json",
   "output": "outputs/results.json",
-  "generations": 3,
   "concurrency": 10,
   "models": [
     {
@@ -51,6 +68,8 @@ The [quickstart config](examples/quickstart_config.json) uses a [test prompt](ex
 ```
 
 The config tells the benchmark what input data to evaluate, which models to test, and where to write results. `input` points to your test data, `output` is where results go.
+
+By default, each category uses its own generation count: 3 for cross-domain and sycophancy, 1 for beneficial memory usage. Set `generations` in the config only if you want to override all categories to the same count. See [Generations](#generations).
 
 See [`examples/example_config.json`](examples/example_config.json) for a full config with one model per [provider](#providers) (OpenAI, Anthropic, Gemini, OpenRouter, Vertex AI, and OpenAI-compatible).
 
@@ -86,7 +105,6 @@ If you're evaluating your own model for the leaderboard, use `benchmark generate
 {
   "input": "benchmark_samples/full_benchmark.jsonl",
   "output": "outputs/my_model_output.json",
-  "generations": 3,
   "concurrency": 10,
   "models": [
     {
@@ -202,7 +220,7 @@ An input file can mix all three failure types. See [`examples/example_input.json
 | `input` | yes | | Path to input JSON or JSONL file |
 | `output` | yes | | Path to output/checkpoint file |
 | `models` | yes | | List of models to evaluate. See [Model Entry](#model-entry). |
-| `generations` | | 1 | Responses per entry per model |
+| `generations` | | per-category | Responses per entry per model. See [Generations](#generations). |
 | `concurrency` | | 1 | Max parallel API calls |
 | `limit` | | all | Max entries to process |
 | `judge_provider` | | `openrouter` | `"vertexai"` or `"openrouter"`. See [Judge](#judge). |
@@ -258,6 +276,28 @@ The `{memories}` placeholder expands to:
 ```
 
 The prompt content is stored in the output file so checkpoint resume works even if the template file is moved or deleted. Use `--dry-run` to preview the full rendered prompt before making API calls.
+
+### Generations
+
+Each failure category has a default generation count that reflects its evaluation needs:
+
+| Category | Default Generations |
+|----------|:-------------------:|
+| `cross_domain` | 3 |
+| `sycophancy` | 3 |
+| `beneficial_memory_usage` | 1 |
+
+When `generations` is omitted from the config (recommended), each entry uses the default for its category. This means the combined 500-sample benchmark produces 1,300 generations per model (200 * 3 + 200 * 3 + 100 * 1).
+
+Set `generations` in the config only to override all categories to the same count:
+
+```json
+{
+  "generations": 5
+}
+```
+
+This applies 5 generations to every entry regardless of category.
 
 ## Providers
 
@@ -376,3 +416,19 @@ All evaluations use `moonshotai/kimi-k2-thinking` at temperature 0. The judge pr
 - **Judge-only**: `benchmark judge output.json` evaluates all generations in a checkpoint. Errors if any generations are missing responses.
 - **Config mismatch protection**: Resuming a checkpoint with changed model config (api_params, provider, mode), judge model, or failure types will error by default to prevent mixed-provenance data. Use `--ignore-config-mismatch` to bypass this, but be aware: only remaining work runs with the new config, already-completed generations and judgments are kept as-is, and the checkpoint metadata is overwritten with the latest config. There is no per-generation record of which config was used.
 - **Removed models**: If you remove a model from your config and resume, its existing results stay in the checkpoint entries but the model is removed from metadata. The old results are preserved but won't be processed further.
+
+
+# Citation
+If you use a part of the code or the benchmark samples, please cite us:
+
+```
+@misc{pulipaka2026persistbenchlongtermmemoriesforgotten,
+      title={PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?}, 
+      author={Sidharth Pulipaka and Oliver Chen and Manas Sharma and Taaha S Bajwa and Vyas Raina and Ivaxi Sheth},
+      year={2026},
+      eprint={2602.01146},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2602.01146}, 
+}
+```
