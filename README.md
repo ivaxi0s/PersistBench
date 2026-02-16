@@ -6,6 +6,8 @@
 PersistBench evaluates long-term memory in LLM assistants. It evaluates three main categories: cross-domain leakage, sycophancy, and beneficial memory usage. 
 Supports checkpoint/resume, batch processing, and multiple inference providers.
 
+> [!IMPORTANT]
+> It is recommended to use the [Inspect-native](https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/persistbench) implementation of PersistBench rather than the implementation in this repository.
 
 ## Table of Contents
 
