@@ -8,6 +8,10 @@ context_switch_traces_*.json
 *_viewer.html
 *.png
 
+# Paper traces are committed intentionally (see paper_traces/README.md)
+!paper_traces/*.json
+!paper_traces/*.html
+
 # Secrets / local env
 .env
 

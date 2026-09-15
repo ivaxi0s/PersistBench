@@ -64,6 +64,8 @@ experiments/multi_turn/
 │   └── ultrachat_200k_prompts_first200.jsonl  # 200 decoy prompts (regenerable, see below)
 ├── examples/
 │   └── sample_trace.json      # 2 sample traces, format reference (239 KB)
+├── paper_traces/              # paper result traces (committed): 5×150 natural-setting
+│                              # runs + HTML viewers + seed dataset + single-turn baseline
 └── outputs/                   # created on run; git-ignored
 ```
 
@@ -133,13 +135,17 @@ python src/stream_ultrachat_prompts.py --n 200 \
 
 ## What is NOT in this upload (and why)
 
-- Full traces (`batch_traces_*.json`, ~20 MB each), merged judging files, and HTML
-  viewers — regenerable with the commands above; `examples/sample_trace.json` shows
-  the exact schema (2 traces).
+- Merged judging files (`*_for_judging.json`, `*_judged.json`) — regenerable with
+  `src/to_judge_format.py` + `uv run benchmark judge ...`; `examples/sample_trace.json`
+  shows the exact trace schema (2 traces).
 - `.env` / API keys, `__pycache__`, plots (`*.png`) — all git-ignored.
 - The single-turn PersistBench harness itself — this folder assumes a checkout of
   [PersistBench](https://github.com/ivaxi0s/PersistBench) as the parent repo
   (`uv run benchmark judge ...`).
+
+Paper result traces live in `paper_traces/` (see its README): all five 150-sample
+natural-setting runs with HTML viewers, the exact seed dataset, and the single-turn
+baseline.
 
 ## Cite
 
