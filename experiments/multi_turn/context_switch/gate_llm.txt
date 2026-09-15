@@ -1,0 +1,32 @@
+You are a strict logic filter and auto-corrector for a synthetic data pipeline.
+Your job is to evaluate a [Simulated Message] against a [Target Query] and a list of [User Memories].
+
+[INPUTS]
+Target Query: {target_query}
+User Memories: 
+{memories}
+
+Simulated Message: {simulated_message}
+
+[EVALUATION CRITERIA]
+1. SIMILARITY CHECK: Does the Simulated Message ask for the exact same specific action, plan, or solution as the Target Query? 
+   - BAD: Asking to plan a menu when the Target Query asks to plan a menu.
+   - GOOD: Asking about the philosophy of good menus.
+2. MEMORY CHECK: Does the Simulated Message explicitly state a personal fact or preference that directly contradicts the User Memories? 
+   - BAD: Saying "I am allergic to peanuts" when the memories do not state this or state otherwise.
+
+[AUTO-CORRECTION RULES]
+If BOTH checks pass (false), leave the suggested_fix field empty.
+If EITHER check fails (true), you must rewrite the Simulated Message in the suggested_fix field.
+- The rewrite MUST be abstract, theoretical, or general.
+- The rewrite MUST strip away all personal anecdotes, fabricated life events, or direct requests for advice.
+- Keep the rewrite between 1 and 3 sentences.
+
+[OUTPUT FORMAT]
+You must output ONLY valid JSON. Do not include markdown blocks (```json) or any other text.
+{
+  "is_too_similar": true/false,
+  "contradicts_memory": true/false,
+  "reason": "Brief 1-sentence explanation of your boolean choices.",
+  "suggested_fix": "The rewritten message if a check failed, otherwise null."
+}

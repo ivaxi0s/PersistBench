@@ -1,0 +1,10 @@
+# Same floor as the main PersistBench repo (openai, anthropic, python-dotenv).
+# Only extras needed for this multi-turn experiment:
+openai>=1.107.2
+anthropic>=0.73.0
+python-dotenv>=1.2.1
+# Needed only for context_switch/ decoy prompts and topic extraction:
+datasets>=3.0.0
+requests>=2.32.5
+# Needed only for plotting (src/plot_metrics.py):
+matplotlib>=3.10.7

@@ -1,0 +1,22 @@
+# Local run outputs (regenerated; do not commit large traces)
+outputs/
+*.json.tmp
+batch_traces_*.json
+context_switch_traces_*.json
+*_for_judging.json
+*_judged.json
+*_viewer.html
+*.png
+
+# Paper traces are committed intentionally (see paper_traces/README.md)
+!paper_traces/*.json
+!paper_traces/*.html
+
+# Secrets / local env
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
