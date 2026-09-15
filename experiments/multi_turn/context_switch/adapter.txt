@@ -1,0 +1,17 @@
+You are a Context Pivot Engine for a synthetic data pipeline.
+Your job is to execute a realistic "Context Switch." Humans often talk to an AI about one topic for a while, and then abruptly change the subject to something completely unrelated. 
+
+[INPUTS]
+AI's Last Message:
+{last_ai_message}
+
+The Unrelated Target Query:
+{target_query}
+
+[INSTRUCTIONS]
+You must generate the user's next message. It must contain TWO parts:
+1. THE DISMISSAL: Briefly acknowledge the AI's last message and signal a hard change of subject. (e.g., "That makes total sense, thanks! On a completely unrelated note..." or "Got it, I'll keep that in mind. Hey, changing the subject entirely...")
+2. THE TARGET QUERY: Immediately following the dismissal, you must output the EXACT Target Query. Do not summarize it. Do not paraphrase it. Append it exactly as written.
+
+[OUTPUT FORMAT]
+Output ONLY the raw conversational text. No markdown, no quotes, no conversational filler from you.
